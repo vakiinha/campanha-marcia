@@ -1,6 +1,45 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <script>
+  // 1. Bloqueia o clique direito do mouse
+  document.addEventListener('contextmenu', event => event.preventDefault());
+
+  // 2. Bloqueia atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U, Ctrl+S, Ctrl+C)
+  document.onkeydown = function(e) {
+    // F12
+    if (e.keyCode == 123) return false;
+    
+    // Ctrl+Shift+I (Inspecionar)
+    if (e.ctrlKey && e.shiftKey && e.keyCode == 73) return false;
+    
+    // Ctrl+Shift+J (Console)
+    if (e.ctrlKey && e.shiftKey && e.keyCode == 74) return false;
+    
+    // Ctrl+U (Ver código fonte)
+    if (e.ctrlKey && e.keyCode == 85) return false;
+    
+    // Ctrl+S (Salvar página)
+    if (e.ctrlKey && e.keyCode == 83) return false;
+
+    // Ctrl+C (Copiar)
+    if (e.ctrlKey && e.keyCode == 67) return false;
+  };
+
+  // 3. Desativa a seleção de texto via CSS injetado pelo JS
+  document.documentElement.style.webkitUserSelect = 'none';
+  document.documentElement.style.userSelect = 'none';
+</script>
+
+<style>
+  /* Bloqueio extra via CSS para garantir que ninguém selecione textos ou imagens */
+  body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+</style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout de Doação</title>
