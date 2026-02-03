@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout de Doação</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { padding: 20px; max-width: 500px; margin: 0 auto; background-color: #fff; }
+        
+        .header { text-align: left; margin-bottom: 20px; }
+        .logo { width: 150px; margin-bottom: 10px; }
+        
+        h1 { font-size: 19px; color: #1a1a1a; margin-bottom: 5px; line-height: 1.3; }
+        .id-number { font-size: 14px; color: #666; margin-bottom: 25px; }
+
+        .value-label { font-weight: 600; font-size: 14px; margin-bottom: 8px; display: block; }
+        .value-input { display: flex; align-items: center; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; }
+        .currency-prefix { background: #f5f5f5; padding: 12px 15px; border-right: 1px solid #ddd; font-weight: bold; }
+        .value-field { flex: 1; padding: 12px; border: none; outline: none; font-size: 16px; }
+
+        .error-message { color: #dc2626; font-size: 12px; margin-bottom: 15px; display: none; }
+
+        .preset-values { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 25px; }
+        .preset-value-btn { padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; background: white; cursor: pointer; font-weight: 500; }
+        .preset-value-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
+
+        /* Seção Forma de Pagamento */
+        /* Seção Forma de Pagamento */
+        .payment-section { margin-bottom: 25px; }
+        
+        .payment-option { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            padding: 12px 18px; 
+            border-radius: 8px; 
+            background: #22c55e; /* Verde do Pix */
+            color: white; 
+            font-weight: 600; 
+            font-size: 15px;
+            width: fit-content;
+            cursor: default;
+        }
+
+        /* A bolinha com o anel branco em volta */
+        .dot { 
+            width: 18px; 
+            height: 18px; 
+            border-radius: 50%; 
+            border: 2px solid white; /* Linha branca em volta */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+        }
+
+        .dot::after {
+            content: "";
+            width: 8px;
+            height: 8px;
+            background: white; /* Bolinha branca no meio */
+            border-radius: 50%;
+        }
+
+        .section-title { font-weight: 600; margin-bottom: 15px; font-size: 15px; }
+        .charity-options { display: flex; gap: 10px; margin-bottom: 25px; }
+        .charity-item { flex: 1; border: 1px dashed #ccc; border-radius: 8px; padding: 12px 5px; text-align: center; cursor: pointer; transition: 0.3s; }
+        .charity-item.selected { border: 2px solid #22c55e; background-color: #f0fdf4; }
+        .charity-item img { height: 35px; margin-bottom: 8px; object-fit: contain; }
+        .charity-name { font-size: 11px; font-weight: 600; display: block; }
+        .charity-price { font-size: 11px; color: #666; }
+
+        .summary { border-top: 1px solid #eee; padding-top: 15px; margin-bottom: 20px; }
+        .summary-item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #444; }
+        .total-row { font-weight: 800; font-size: 16px; color: #000; margin-top: 5px; }
+
+        .contribute-button { background-color: #22c55e; color: white; border: none; border-radius: 6px; padding: 16px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .contribute-button:disabled { opacity: 0.5; }
+        
+        #qr-result { margin-top: 25px; text-align: center; display: none; padding: 20px; border: 1px solid #eee; border-radius: 12px; background: #f9f9f9; }
+        #qrcode { display: inline-block; margin: 15px 0; padding: 10px; background: white; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <img src="images/logo.svg" alt="Vakinha" class="logo">
+    </div>
+
+    <h1>Ajude a Márcia a continuar sua luta contra o câncer</h1>
+    <div class="id-number">ID: 5767418</div>
+
+    <label class="value-label">Valor da contribuição</label>
+    <div class="value-input">
+        <div class="currency-prefix">R$</div>
+        <input type="tel" id="contribution-input" class="value-field" placeholder="0,00">
+    </div>
+
+    <div id="error-message" class="error-message">Valor mínimo da doação é de R$ 10,00</div>
+
+    <div class="preset-values">
+        <button class="preset-value-btn" data-value="30">R$ 30,00</button>
+        <button class="preset-value-btn" data-value="50">R$ 50,00</button>
+        <button class="preset-value-btn" data-value="75">R$ 75,00</button>
+        <button class="preset-value-btn" data-value="100">R$ 100,00</button>
+        <button class="preset-value-btn" data-value="150">R$ 150,00</button>
+        <button class="preset-value-btn" data-value="200">R$ 200,00</button>
+    </div>
+
+    <div class="payment-section">
+        <label class="value-label">Forma de pagamento</label>
+        <div class="payment-methods">
+            <div class="payment-option">
+                <div class="dot"></div>
+                Pix
+            </div>
+        </div>
+    </div>
+
+    <div class="section-title">Turbine sua doação 💚</div>
+    <p style="font-size: 12px; color: #666; margin-top: -10px; margin-bottom: 15px;">Ajude MUITO MAIS turbinando sua doação</p>
+    
+    <div class="charity-options">
+        <div class="charity-item" data-value="12.00">
+            <img src="images/car1.png"> <span class="charity-name">Auxílio transporte</span>
+            <span class="charity-price">R$ 12,00</span>
+        </div>
+        <div class="charity-item" data-value="25.00">
+            <img src="images/doarremedios.webp">
+            <span class="charity-name">Ajuda com medicações</span>
+            <span class="charity-price">R$ 25,00</span>
+        </div>
+        <div class="charity-item" data-value="75.00">
+            <img src="images/lunaa-removebg-preview.png">
+            <span class="charity-name">Doar cesta básica</span>
+            <span class="charity-price">R$ 75,00</span>
+        </div>
+    </div>
+
+    <div class="summary">
+        <div class="summary-item">
+            <span>Contribuição:</span>
+            <span id="summary-contribution-value">R$ 0,00</span>
+        </div>
+        <div class="summary-item total-row">
+            <span>Total:</span>
+            <span id="summary-total-value">R$ 0,00</span>
+        </div>
+    </div>
+
+    <button id="btn-submit" class="contribute-button" disabled>CONTRIBUIR</button>
+
+    <div id="qr-result">
+        <h3 style="font-size: 16px;">Seu QR Code Gerado!</h3>
+        <div id="qrcode"></div>
+        <p style="font-size: 12px; color: #333; font-weight: bold; margin-bottom: 5px;">CÓDIGO COPIA E COLA:</p>
+        <textarea id="pix-code" readonly style="width: 100%; font-size: 10px; padding: 5px; border-radius: 4px; border: 1px solid #ccc; height: 50px; background: #eee;"></textarea>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const input = document.getElementById("contribution-input");
+            const displayContrib = document.getElementById("summary-contribution-value");
+            const displayTotal = document.getElementById("summary-total-value");
+            const errorMsg = document.getElementById("error-message");
+            const btnSubmit = document.getElementById("btn-submit");
+            const charityItems = document.querySelectorAll(".charity-item");
+            const presetButtons = document.querySelectorAll(".preset-value-btn");
+
+            let valorBase = 0;
+            let valorAdicional = 0;
+
+            function atualizarTudo() {
+                const total = valorBase + valorAdicional;
+                displayContrib.innerText = "R$ " + valorBase.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                displayTotal.innerText = "R$ " + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+                if (total >= 10) {
+                    errorMsg.style.display = "none";
+                    btnSubmit.disabled = false;
+                } else {
+                    errorMsg.style.display = total > 0 ? "block" : "none";
+                    btnSubmit.disabled = true;
+                }
+            }
+
+            input.addEventListener("input", (e) => {
+                let v = e.target.value.replace(/\D/g, "");
+                valorBase = v ? parseFloat(v) / 100 : 0;
+                e.target.value = valorBase.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                presetButtons.forEach(b => b.classList.remove("active"));
+                atualizarTudo();
+            });
+
+            presetButtons.forEach(btn => {
+                btn.onclick = () => {
+                    presetButtons.forEach(b => b.classList.remove("active"));
+                    btn.classList.add("active");
+                    valorBase = parseFloat(btn.getAttribute("data-value"));
+                    input.value = valorBase.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                    atualizarTudo();
+                };
+            });
+
+            charityItems.forEach(item => {
+                item.onclick = () => {
+                    const val = parseFloat(item.getAttribute("data-value"));
+                    item.classList.toggle("selected");
+                    valorAdicional += item.classList.contains("selected") ? val : -val;
+                    atualizarTudo();
+                };
+            });
+
+            btnSubmit.onclick = () => {
+                const totalFinal = (valorBase + valorAdicional).toFixed(2);
+                document.getElementById("qr-result").style.display = "block";
+                document.getElementById("qrcode").innerHTML = "";
+                
+                // Payload PIX Fictício
+                const payload = "00020126330014BR.GOV.BCB.PIX0111SUACHAVEPIX6304" + totalFinal;
+                document.getElementById("pix-code").value = payload;
+
+                new QRCode(document.getElementById("qrcode"), { text: payload, width: 160, height: 160 });
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            };
+        });
+    </script>
+</body>
+</html>
